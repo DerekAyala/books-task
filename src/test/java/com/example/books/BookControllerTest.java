@@ -18,6 +18,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -33,6 +35,49 @@ public class BookControllerTest {
 
     @MockBean
     private BookRepository bookRepository;
+
+    @Test
+    public void testGetAllBooks() throws Exception {
+        Genre genre = new Genre(1L, "Fiction");
+        Author author = new Author(1L, "John Doe");
+        List<Book> books = Arrays.asList(
+                new Book(1L, "Book 1", author, genre, 10.99),
+                new Book(2L, "Book 2", author, genre, 12.99)
+        );
+
+        when(bookRepository.findAll()).thenReturn(books);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/books"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.size()").value(books.size()));
+    }
+
+    @Test
+    public void testGetBookById() throws Exception {
+        Genre genre = new Genre(1L, "Fiction");
+        Author author = new Author(1L, "John Doe");
+        Book book = new Book(1L, "Fantastic Book", author, genre, 10.99);
+
+        when(bookRepository.findById(eq(1L))).thenReturn(Optional.of(book));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/books/1"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(book.getId()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").value(book.getTitle()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.author.id").value(book.getAuthor().getId()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.author.name").value(book.getAuthor().getName()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.genre.id").value(book.getGenre().getId()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.genre.name").value(book.getGenre().getName()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.price").value(book.getPrice()));
+    }
+
+    @Test
+    public void testGetBookById_NotFound() throws Exception {
+        when(bookRepository.findById(eq(1L))).thenReturn(Optional.empty());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/books/1"))
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
 
     @Test
     public void testCreateBook() throws Exception {
