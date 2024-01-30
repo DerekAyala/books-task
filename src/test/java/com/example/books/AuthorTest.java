@@ -8,7 +8,7 @@ public class AuthorTest {
 
     @Test
     public void testAuthorModel() {
-        Author author = new Author("John Doe");
+        Author author = new Author(1L,"John Doe");
 
         Assertions.assertEquals(1L, author.getId());
         Assertions.assertEquals("John Doe", author.getName());
